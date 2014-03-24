@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta xmlns="http://exist-db.org/xquery/repo">
+    <description>XML Schema Library</description>
+    <author/>
+    <website/>
+    <status>alpha</status>
+    <license>GNU-LGPL</license>
+    <copyright>true</copyright>
+    <type>library</type>
+    <target>xsd-lib</target>
+    <prepare>pre-install.xql</prepare>
+    <finish/>
+    <deployed>2014-03-23T19:52:55.56-04:00</deployed>
+</meta>
