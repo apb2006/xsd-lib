@@ -1,13 +1,14 @@
 xquery version "3.0";
-
+(:~
+ : generate svg representation of xmlschema
+ :This XQuery function module is a translation of the java code from xsdvi on Sourceforge. 
+ :The software seems to have been written by Václav Slavětínský in 2008 as part of his Bachelor thesis 
+ :at the University of Economics, Prague, Czech Republic.
+:)
 module namespace xs2svg="http://expath.org/lib/xs2svg";
 
 declare namespace xs="http://www.w3.org/2001/XMLSchema";
-
-declare namespace test="http://exist-db.org/xquery/xqsuite";
-
 declare namespace xlink="http://www.w3.org/1999/xlink";
-
 declare namespace svg="http://www.w3.org/2000/svg";
 
 declare variable $xs2svg:PC_STRICT  as xs:integer := 1;
@@ -20,22 +21,27 @@ declare variable $xs2svg:MAX_HEIGHT as xs:integer := 46;
 declare variable $xs2svg:MID_HEIGHT as xs:integer := 31;
 declare variable $xs2svg:MIN_HEIGHT as xs:integer := 21;
 
-
-
-declare function xs2svg:svg($node as node()?, $model as map()) {
-(:    let $nl := "&#10;"
-    let $javascript := util:binary-to-string(util:binary-doc('/db/apps/xsd-lib/resources/xs2svg.js'))
-    return
-:)          
+declare function xs2svg:svg($node as node()?, $model as map(*)) {
+  xs2svg:svg($node, $model ,"xs2svg.js")
+};
+ 
+ (:~
+  : generate svg (no namespace)for schema in node,
+  : @param $node schema
+  : @param $model
+  : @param path to location of javascript 
+  :) 
+declare function xs2svg:svg($node as node()?, $model as map(*),$jshref as xs:string) as element(svg)
+{
+        
         element { "svg" } {
-            namespace { "" } { 'http://www.w3.org/2000/svg' },
             namespace { 'xlink' } { 'http://www.w3.org/1999/xlink' },
             attribute { 'id' } { 'svg' },
             attribute { 'onload' } { 'loadSVG();' },
             element { 'title' } { 'XsdVi' },
             element { 'script' } {
                 attribute { 'type' } { 'text/ecmascript' },
-                attribute { 'xlink:href' } { 'xs2svg.js' }
+                attribute { 'xlink:href' } { $jshref }
             },
             element { 'defs' } {
                 element { 'symbol' } {
@@ -121,12 +127,12 @@ declare function xs2svg:svg($node as node()?, $model as map()) {
                 attribute { 'y' } { '20' },
                 'expand all'
             },
-            xs2svg:process-node($node, map { 'id' := '_1', 'x-position' := 1, 'y-position' := '1' }
-            )
+            xs2svg:process-node($node, map { 'id' := '_1', 'x-position' := 1, 'y-position' := '1' })
+    
         }
 };
 
-declare function xs2svg:use($node as node(), $model as map()) {
+declare function xs2svg:use($node as node(), $model as map(*)) {
     if ($node/node())
     then 
         let $qt := "&#39;"
@@ -143,7 +149,7 @@ declare function xs2svg:use($node as node(), $model as map()) {
     else ()
 };
 
-declare function xs2svg:draw-connection($node as node(), $model as map()) {
+declare function xs2svg:draw-connection($node as node(), $model as map(*)) {
      if (($model('position') = $model('count')) and ($model('count') gt 1))
      then (
             element { 'line' } {
@@ -168,7 +174,7 @@ declare function xs2svg:draw-connection($node as node(), $model as map()) {
             }
 };
 
-declare function xs2svg:on-mouseover($node as node(), $model as map()) {
+declare function xs2svg:on-mouseover($node as node(), $model as map(*)) {
     (
     attribute { 'onmouseover' } { "makeVisible('" || $model('id') || "')" },
     attribute { 'onmouseout' } { "makeHidden('" || $model('id') || "')" }
@@ -193,7 +199,7 @@ declare function xs2svg:cardinality($node as node()) as xs:string {
             else ""
 };
 
-declare function xs2svg:process-node($node as node()?, $model as map()) {
+declare function xs2svg:process-node($node as node()?, $model as map(*)) {
     if ($node) then 
     typeswitch($node) 
         case text() return $node 
@@ -243,7 +249,7 @@ declare function xs2svg:process-node($node as node()?, $model as map()) {
     else () 
 };
 
-declare function xs2svg:recurse($node as node()?, $model as map()) as item()* {
+declare function xs2svg:recurse($node as node()?, $model as map(*)) as item()* {
     if ($node) 
     then
         let $children := $node/*[('xs:all', 'xs:any', 'xs:anyAttribute', 'xs:attribute', 'xs:choice', 'xs:element', 'xs:field', 
@@ -270,17 +276,7 @@ declare function xs2svg:recurse($node as node()?, $model as map()) as item()* {
     else ()
 };
 
-(:~
 
-
-: @author  Auto generated
-: @version 1.0
-: @param   $node the current node being processed
-: @param   $model a map() used for passing additional information between the levels
-:)
-declare function xs2svg:all($node as node(), $model as map()) {
-    xs2svg:recurse($node, $model)
-};
 
 (:~
 : @author  Auto generated
@@ -288,7 +284,7 @@ declare function xs2svg:all($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:all($node as node(), $model as map()) {
+declare function xs2svg:all($node as node(), $model as map(*)) {
     let $cardinality := xs2svg:cardinality($node)
     let $width := xs2svg:calcWidth(15, $cardinality, 0)
     let $x-position := xs:integer($model('x-position'))
@@ -350,7 +346,7 @@ declare function xs2svg:all($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:annotation($node as node(), $model as map()) {
+declare function xs2svg:annotation($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -362,7 +358,7 @@ declare function xs2svg:annotation($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:any($node as node(), $model as map()) {
+declare function xs2svg:any($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -374,7 +370,7 @@ declare function xs2svg:any($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:anyAttribute($node as node(), $model as map()) {
+declare function xs2svg:anyAttribute($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -386,7 +382,7 @@ declare function xs2svg:anyAttribute($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:appinfo($node as node(), $model as map()) {
+declare function xs2svg:appinfo($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -398,7 +394,7 @@ declare function xs2svg:appinfo($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:attribute($node as node(), $model as map()) {
+declare function xs2svg:attribute($node as node(), $model as map(*)) {
     let $required := false()
     let $name := $node/@name/string()
     let $namespace := fn:namespace-uri($node)
@@ -460,7 +456,7 @@ declare function xs2svg:attribute($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:attributeGroup($node as node(), $model as map()) {
+declare function xs2svg:attributeGroup($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -472,7 +468,7 @@ declare function xs2svg:attributeGroup($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:choice($node as node(), $model as map()) {
+declare function xs2svg:choice($node as node(), $model as map(*)) {
     let $cardinality := xs2svg:cardinality($node)
     let $width := xs2svg:calcWidth(15, $cardinality, 0)
     let $x-position := xs:integer($model('x-position'))
@@ -532,7 +528,7 @@ declare function xs2svg:choice($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:complexContent($node as node(), $model as map()) {
+declare function xs2svg:complexContent($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -544,7 +540,7 @@ declare function xs2svg:complexContent($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:complexType($node as node(), $model as map()) {
+declare function xs2svg:complexType($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -556,7 +552,7 @@ declare function xs2svg:complexType($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:documentation($node as node(), $model as map()) {
+declare function xs2svg:documentation($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -568,7 +564,7 @@ declare function xs2svg:documentation($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:element($node as node(), $model as map()) {
+declare function xs2svg:element($node as node(), $model as map(*)) {
     let $name := $node/@name/string()
     let $namespace := fn:namespace-uri($node)
     let $type := $node/@type/string()
@@ -643,7 +639,7 @@ declare function xs2svg:element($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:enumeration($node as node(), $model as map()) {
+declare function xs2svg:enumeration($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -655,7 +651,7 @@ declare function xs2svg:enumeration($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:extension($node as node(), $model as map()) {
+declare function xs2svg:extension($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -679,7 +675,7 @@ The following pattern is intended to allow XPath
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:field($node as node(), $model as map()) {
+declare function xs2svg:field($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -691,7 +687,7 @@ declare function xs2svg:field($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:fractionDigits($node as node(), $model as map()) {
+declare function xs2svg:fractionDigits($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -703,7 +699,7 @@ declare function xs2svg:fractionDigits($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:group($node as node(), $model as map()) {
+declare function xs2svg:group($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -715,7 +711,7 @@ declare function xs2svg:group($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:import($node as node(), $model as map()) {
+declare function xs2svg:import($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -727,7 +723,7 @@ declare function xs2svg:import($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:include($node as node(), $model as map()) {
+declare function xs2svg:include($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -739,7 +735,7 @@ declare function xs2svg:include($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:key($node as node(), $model as map()) {
+declare function xs2svg:key($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -751,7 +747,7 @@ declare function xs2svg:key($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:keyref($node as node(), $model as map()) {
+declare function xs2svg:keyref($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -763,7 +759,7 @@ declare function xs2svg:keyref($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:length($node as node(), $model as map()) {
+declare function xs2svg:length($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -778,7 +774,7 @@ declare function xs2svg:length($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:list($node as node(), $model as map()) {
+declare function xs2svg:list($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -790,7 +786,7 @@ declare function xs2svg:list($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:maxExclusive($node as node(), $model as map()) {
+declare function xs2svg:maxExclusive($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -802,7 +798,7 @@ declare function xs2svg:maxExclusive($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:maxInclusive($node as node(), $model as map()) {
+declare function xs2svg:maxInclusive($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -814,7 +810,7 @@ declare function xs2svg:maxInclusive($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:maxLength($node as node(), $model as map()) {
+declare function xs2svg:maxLength($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -826,7 +822,7 @@ declare function xs2svg:maxLength($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:minExclusive($node as node(), $model as map()) {
+declare function xs2svg:minExclusive($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -838,7 +834,7 @@ declare function xs2svg:minExclusive($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:minInclusive($node as node(), $model as map()) {
+declare function xs2svg:minInclusive($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -850,7 +846,7 @@ declare function xs2svg:minInclusive($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:minLength($node as node(), $model as map()) {
+declare function xs2svg:minLength($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -862,7 +858,7 @@ declare function xs2svg:minLength($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:notation($node as node(), $model as map()) {
+declare function xs2svg:notation($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -874,7 +870,7 @@ declare function xs2svg:notation($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:pattern($node as node(), $model as map()) {
+declare function xs2svg:pattern($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -886,7 +882,7 @@ declare function xs2svg:pattern($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:redefine($node as node(), $model as map()) {
+declare function xs2svg:redefine($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -901,7 +897,7 @@ declare function xs2svg:redefine($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:restriction($node as node(), $model as map()) {
+declare function xs2svg:restriction($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -913,7 +909,7 @@ declare function xs2svg:restriction($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:schema($node as node(), $model as map()) {
+declare function xs2svg:schema($node as node(), $model as map(*)) {
     let $new-map := map:new(($model, map:entry('width', 63), map:entry('x-position', 20)))
     return
     (<g id='{$model('id')}' class='box' transform='translate(20,50)'>
@@ -947,7 +943,7 @@ The following pattern is intended to allow XPath
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:selector($node as node(), $model as map()) {
+declare function xs2svg:selector($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -959,7 +955,7 @@ declare function xs2svg:selector($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:sequence($node as node(), $model as map()) {
+declare function xs2svg:sequence($node as node(), $model as map(*)) {
     let $cardinality := xs2svg:cardinality($node)
     let $width := xs2svg:calcWidth(15, $cardinality, 0)
     let $x-position := xs:integer($model('x-position'))
@@ -1035,7 +1031,7 @@ declare function xs2svg:sequence($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:simpleContent($node as node(), $model as map()) {
+declare function xs2svg:simpleContent($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -1047,7 +1043,7 @@ declare function xs2svg:simpleContent($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:simpleType($node as node(), $model as map()) {
+declare function xs2svg:simpleType($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -1059,7 +1055,7 @@ declare function xs2svg:simpleType($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:totalDigits($node as node(), $model as map()) {
+declare function xs2svg:totalDigits($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -1074,7 +1070,7 @@ declare function xs2svg:totalDigits($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:union($node as node(), $model as map()) {
+declare function xs2svg:union($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -1086,7 +1082,7 @@ declare function xs2svg:union($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:unique($node as node(), $model as map()) {
+declare function xs2svg:unique($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
 
@@ -1098,6 +1094,6 @@ declare function xs2svg:unique($node as node(), $model as map()) {
 : @param   $node the current node being processed
 : @param   $model a map() used for passing additional information between the levels
 :)
-declare function xs2svg:whiteSpace($node as node(), $model as map()) {
+declare function xs2svg:whiteSpace($node as node(), $model as map(*)) {
     xs2svg:recurse($node, $model)
 };
